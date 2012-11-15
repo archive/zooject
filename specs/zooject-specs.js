@@ -1,109 +1,104 @@
+/*jshint forin:true, noarg:true, noempty:true, eqeqeq:true, bitwise:true, strict:true, undef:true, unused:true, curly:true, browser:true, indent:2, maxerr:50 */
+/*global describe:false, it:false, expect:false, Zooject:false, beforeEach:false */
+
 describe('Zooject specifications', function () {
-	
-	describe('with a registered dependency', function () {
+  
+  'use strict';
 
-		it('should be able to resolve by class name', function () {
-			var zooject = new Zooject();
-			var TheDependency = function () {};
-			var TheClass = function (theDependency) {
-				this.theDependency = theDependency;
-			};
+  describe('with a registered dependency', function () {
 
-			zooject.register('TheDependency', TheDependency);
-			zooject.register('TheClass', TheClass);
+    var zooject = {};
 
-			var theClass = zooject.resolve('TheClass');
+    beforeEach(function () {
+      zooject = new Zooject();
 
-			expect(theClass.theDependency).toBeDefined();
-		});
+      var TheDependency = function () {};
+      zooject.register('TheDependency', TheDependency);
+    });
 
-		it('should be able to resolve by class', function () {
-			var zooject = new Zooject();
-			var TheDependency = function () {};
-			var TheClass = function (theDependency) {
-				this.theDependency = theDependency;
-			};
+    it('should be able to resolve by class name', function () {
+      var TheClass = function (theDependency) {
+        this.theDependency = theDependency;
+      };
 
-			zooject.register('TheDependency', TheDependency);
+      zooject.register('TheClass', TheClass);
 
-			var theClass = zooject.resolve(TheClass);
+      var theClass = zooject.resolve('TheClass');
 
-			expect(theClass.theDependency).toBeDefined();
-		});
+      expect(theClass.theDependency).toBeDefined();
+    });
 
-		it('should be able to resolve by anonymous function', function () {
-			var zooject = new Zooject();
-			var TheDependency = function () {};
+    it('should be able to resolve by class', function () {
+      var TheClass = function (theDependency) {
+        this.theDependency = theDependency;
+      };
 
-			zooject.register('TheDependency', TheDependency);
+      var theClass = zooject.resolve(TheClass);
 
-			var theClass = zooject.resolve(function (theDependency) {
-				this.theDependency = theDependency;
-			});
+      expect(theClass.theDependency).toBeDefined();
+    });
 
-			expect(theClass.theDependency).toBeDefined();
-		});		
+    it('should be able to resolve by anonymous function', function () {
+      var theClass = zooject.resolve(function (theDependency) {
+        this.theDependency = theDependency;
+      });
 
-		it('should be able to resolve complex structures', function () {
-			var zooject = new Zooject();
-			var TheDependencyA = function () {};
-			var TheDependencyB = function (theDependencyA) {
-				this.theDependencyA = theDependencyA;
-			};
-			var TheClass = function (theDependencyB) {
-				this.theDependencyB = theDependencyB;
-			};
+      expect(theClass.theDependency).toBeDefined();
+    });   
 
-			zooject.register('TheDependencyA', TheDependencyA);
-			zooject.register('TheDependencyB', TheDependencyB);
+    it('should be able to resolve complex structures', function () {
+      var TheDependencyA = function () {};
+      var TheDependencyB = function (theDependencyA) {
+        this.theDependencyA = theDependencyA;
+      };
+      var TheClass = function (theDependencyB) {
+        this.theDependencyB = theDependencyB;
+      };
 
-			var theClass = zooject.resolve(TheClass);
+      zooject.register('TheDependencyA', TheDependencyA);
+      zooject.register('TheDependencyB', TheDependencyB);
 
-			expect(theClass.theDependencyB.theDependencyA).toBeDefined();
-		});
+      var theClass = zooject.resolve(TheClass);
 
-		describe('singleton resolve', function () {
+      expect(theClass.theDependencyB.theDependencyA).toBeDefined();
+    });
 
-			it('should be a new object resolved', function () {
-				var zooject = new Zooject();
-				var TheDependency = function () {};
+    describe('singleton resolve', function () {
 
-				zooject.registerSingleton('TheDependency', TheDependency);
+      it('should be a new object resolved', function () {
+        var TheDependency = function () {};
 
-				var theClass1 = zooject.resolve(function (theDependency) {
-					this.theDependency = theDependency;
-				});
+        zooject.registerSingleton('TheDependency', TheDependency);
 
-				var theClass2 = zooject.resolve(function (theDependency) {
-					this.theDependency = theDependency;
-				});
+        var theClass1 = zooject.resolve(function (theDependency) {
+          this.theDependency = theDependency;
+        });
 
-				expect(theClass1.theDependency).toBe(theClass2.theDependency);
-			});
+        var theClass2 = zooject.resolve(function (theDependency) {
+          this.theDependency = theDependency;
+        });
 
-		});
+        expect(theClass1.theDependency).toBe(theClass2.theDependency);
+      });
 
-		describe('non-singleton resolve', function () {
+    });
 
-			it('should be a new object resolved', function () {
-				var zooject = new Zooject();
-				var TheDependency = function () {};
+    describe('non-singleton resolve', function () {
 
-				zooject.register('TheDependency', TheDependency);
+      it('should be a new object resolved', function () {
+        var theClass1 = zooject.resolve(function (theDependency) {
+          this.theDependency = theDependency;
+        });
 
-				var theClass1 = zooject.resolve(function (theDependency) {
-					this.theDependency = theDependency;
-				});
+        var theClass2 = zooject.resolve(function (theDependency) {
+          this.theDependency = theDependency;
+        });
 
-				var theClass2 = zooject.resolve(function (theDependency) {
-					this.theDependency = theDependency;
-				});
+        expect(theClass1.theDependency).not.toBe(theClass2.theDependency);
+      });
+      
+    });
 
-				expect(theClass1.theDependency).not.toBe(theClass2.theDependency);
-			});
-			
-		});
-
-	});
+  });
 
 });

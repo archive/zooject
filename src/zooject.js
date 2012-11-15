@@ -1,103 +1,128 @@
+/*jshint forin:true, noarg:true, noempty:true, eqeqeq:true, bitwise:true, strict:true, undef:true, unused:true, curly:true, browser:true, indent:2, maxerr:50 */
+
 (function (context) {
 
-	var Zooject = function () {
-		this._repository = {};
-	};
+  'use strict';
 
-	var z = Zooject.prototype;
+  var Zooject = function () {
+    this._repository = {};
+  };
 
-	z.register = function (className, TheClass) {
-		this._register(className, TheClass, false);
-	};
+  var z = Zooject.prototype;
 
-	z.registerSingleton = function (className, TheClass) {
-		this._register(className, TheClass, true);
-	};
+  z.register = function (className, TheClass) {
+    this._register(className, TheClass, false);
+  };
 
-	z._register = function function_name (className, TheClass, singleton) {
-		dependencyName = this._formatDependencyName(className);
-		this._repository[dependencyName] = {
-			'TheClass': TheClass,
-			'singleton' : singleton,
-			'singletonInstance': null
-		};
-	};
+  z.registerSingleton = function (className, TheClass) {
+    this._register(className, TheClass, true);
+  };
 
-	z._formatDependencyName = function (className) {
-		return className.charAt(0).toLowerCase() + className.slice(1);
-	};
+  z._register = function (className, TheClass, singleton) {
+    var dependencyName = this._formatDependencyName(className);
+    this._repository[dependencyName] = {
+      'TheClass': TheClass,
+      'singleton' : singleton,
+      'singletonInstance': null
+    };
+  };
 
-	z.resolve = function (classNameOrClass) {
-		if (typeof classNameOrClass === 'string') {
-			var dependencyName = this._formatDependencyName(classNameOrClass);
-			return this._resolveByDependencyName(dependencyName);
-		}
-		var TheClass = classNameOrClass;
-		return this._resolveByClass(TheClass);
-	};
+  z._formatDependencyName = function (className) {
+    return className.charAt(0).toLowerCase() + className.slice(1);
+  };
 
-	z._resolveByDependencyName = function (dependencyName) {
-		var TheClass = this._repository[dependencyName].TheClass;
-		return this._resolveByClass(TheClass);
-	};
+  z.resolve = function (classNameOrClass) {
+    if (typeof classNameOrClass === 'string') {
+      var dependencyName = this._formatDependencyName(classNameOrClass);
+      return this._resolveByDependencyName(dependencyName);
+    }
+    var TheClass = classNameOrClass;
+    return this._resolveByClass(TheClass);
+  };
 
-	z._resolveByClass = function (TheClass) {
-		var dependencies = this._resolveDependencies(TheClass);
-		return this._instantiate(TheClass, dependencies);
-	};
+  z._resolveByDependencyName = function (dependencyName) {
+    var TheClass = this._repository[dependencyName].TheClass;
+    return this._resolveByClass(TheClass);
+  };
 
-	z._resolveDependencies = function (TheClass) {
-		var dependencyNames = this._getDependencies(TheClass);
-		var dependencies = [];
-		Array.prototype.forEach.call(dependencyNames, function eachArgument (dependencyName) {
-			var dependency = {};
+  z._resolveByClass = function (TheClass) {
+    var dependencies = this._resolveDependencies(TheClass);
+    return this._instantiate(TheClass, dependencies);
+  };
 
-			var dependencyItem = this._repository[dependencyName];
-			if (dependencyItem.singleton) {
-				
-				if (dependencyItem.singletonInstance) {
-					dependency = dependencyItem.singletonInstance;
-				} else {
-					dependency = this.resolve(dependencyName);
-					dependencyItem.singletonInstance = dependency;
-				}
+  z._resolveDependencies = function (TheClass) {
+    var dependencyNames = this._getDependencies(TheClass);
+    var dependencies = [];
+    Array.prototype.forEach.call(dependencyNames, function eachArgument(dependencyName) {
+      var dependency = {};
 
-			} else {
-				dependency = this.resolve(dependencyName);
-			}
+      var dependencyItem = this._repository[dependencyName];
+      if (dependencyItem.singleton) {
+        
+        if (dependencyItem.singletonInstance) {
+          dependency = dependencyItem.singletonInstance;
+        } else {
+          dependency = this.resolve(dependencyName);
+          dependencyItem.singletonInstance = dependency;
+        }
 
-			dependencies.push(dependency);
-		}.bind(this));	
-		return dependencies;
-	};
+      } else {
+        dependency = this.resolve(dependencyName);
+      }
 
-	z._instantiate = function (TheClass, dep) {
-		// http://jsperf.com/apply-vs-call-vs-invoke
-		var instance = {};
-		switch (TheClass.length) {
-			case 0: instance = new TheClass(); break;
-			case 1: instance = new TheClass(dep[0]); break;
-			case 2: instance = new TheClass(dep[0], dep[1]); break;
-			case 3: instance = new TheClass(dep[0], dep[1], dep[2]); break;
-			case 4: instance = new TheClass(dep[0], dep[1], dep[2], dep[3]); break;
-			case 5: instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4]); break;
-			case 6: instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4], dep[5]); break;
-			case 7: instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4], dep[5], dep[6]); break;
-			case 8: instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4], dep[5], dep[6], dep[7]); break;
-			case 9: instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4], dep[5], dep[6], dep[7], dep[8]); break;
-			default: throw 'You have more than 9 dependencies, you must be crazy';
-		}
-		return instance;
-	};
+      dependencies.push(dependency);
+    }.bind(this));  
+    return dependencies;
+  };
 
-	z._getDependencies = function (TheClass) {
-		var argsRegexp = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
-		var argsString = TheClass.toString().match(argsRegexp)[1];
-		return argsString ? argsString.split(',') : [];
-	};
+  z._instantiate = function (TheClass, dep) {
+    // http://jsperf.com/apply-vs-call-vs-invoke
+    var instance = {};
+    switch (TheClass.length) {
+    case 0: 
+      instance = new TheClass(); 
+      break;
+    case 1: 
+      instance = new TheClass(dep[0]); 
+      break;
+    case 2: 
+      instance = new TheClass(dep[0], dep[1]); 
+      break;
+    case 3: 
+      instance = new TheClass(dep[0], dep[1], dep[2]); 
+      break;
+    case 4: 
+      instance = new TheClass(dep[0], dep[1], dep[2], dep[3]); 
+      break;
+    case 5: 
+      instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4]); 
+      break;
+    case 6: 
+      instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4], dep[5]); 
+      break;
+    case 7: 
+      instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4], dep[5], dep[6]); 
+      break;
+    case 8: 
+      instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4], dep[5], dep[6], dep[7]); 
+      break;
+    case 9: 
+      instance = new TheClass(dep[0], dep[1], dep[2], dep[3], dep[4], dep[5], dep[6], dep[7], dep[8]); 
+      break;
+    default: 
+      throw 'You have more than 9 dependencies, you must be crazy';
+    }
+    return instance;
+  };
 
-	context.Zooject = Zooject;
+  z._getDependencies = function (TheClass) {
+    var argsRegexp = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
+    var argsString = TheClass.toString().match(argsRegexp)[1];
+    return argsString ? argsString.split(',') : [];
+  };
 
-	// possibility to resolve container?
+  context.Zooject = Zooject;
+
+  // possibility to resolve container?
 
 })(window); // add exports || window for none browser env
